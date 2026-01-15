@@ -5,7 +5,7 @@ import { getTickets, getBookings, holdTickets, confirmBooking, bookTickets } fro
 import { cacheService } from './services/cacheService.js';
 
 const app = express();
-const port = process.env.PORT ? parseInt(process.env.PORT) : 3001;
+const port = process.env.PORT ? parseInt(process.env.PORT) : 3003;
 
 app.use(cors());
 app.use(express.json());

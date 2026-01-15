@@ -33,28 +33,29 @@ A full-stack ticket booking application with React frontend, Express backend, Re
 ## Quick Start
 
 ### Prerequisites
-- Docker and Docker Compose
-- Node.js 18+ (for local development)
-- Redis (for local development without Docker)
+- Node.js 18+ (required)
+- Redis (optional - app works without it)
+- Docker and Docker Compose (optional - for containerized deployment)
 
 ### Using Docker (Recommended)
 
-1. Clone the repository
+1. **Start Docker Desktop** (if using Docker)
+2. Clone the repository
 ```bash
 git clone <repository-url>
 cd ticket-booking-app
 ```
 
-2. Start all services
+3. Start all services
 ```bash
 docker-compose up --build
 ```
 
-3. Access the application
+4. Access the application
 - Frontend: http://localhost:3000
 - Backend API: http://localhost:3001
 
-### Local Development
+### Local Development (Without Docker)
 
 1. Install dependencies
 ```bash

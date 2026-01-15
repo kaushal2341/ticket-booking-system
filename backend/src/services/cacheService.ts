@@ -1,4 +1,5 @@
-import { createClient, RedisClientType } from 'redis';
+import { createClient } from 'redis';
+import type { RedisClientType } from 'redis';
 
 export class CacheService {
   private client: RedisClientType;
@@ -27,7 +28,12 @@ export class CacheService {
 
   async connect(): Promise<void> {
     if (!this.isConnected) {
-      await this.client.connect();
+      try {
+        await this.client.connect();
+      } catch (error) {
+        console.warn('Redis connection failed, running without cache:', error instanceof Error ? error.message : String(error));
+        // Continue without Redis - app will work but without caching
+      }
     }
   }
 
