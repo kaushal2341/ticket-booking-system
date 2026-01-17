@@ -1,63 +1,68 @@
 # Ticket Booking System
 
-A full-stack ticket booking application with React frontend, Express backend, Redis caching, and Docker deployment.
+A full-stack ticket booking application with React frontend, Node.js/Express backend, TypeORM database integration, and Docker deployment.
 
 ## Features
 
-### 🚀 Performance Optimizations
-- **Bundle Size Minimization**: Disabled source maps in production builds
-- **Code Splitting**: Lazy loading for React components
-- **Caching**: Redis-based caching with automatic invalidation
-- **Gzip Compression**: Nginx configuration for compressed responses
-- **Static Asset Caching**: Long-term caching for JS/CSS/images
+### 🎫 Core Functionality
+- **Ticket Management**: Three ticket tiers (VIP, Front Row, General Admission)
+- **Real-time Availability**: Live ticket availability tracking with visual progress bars
+- **Ticket Holding**: 5-minute hold system to reserve tickets before payment
+- **Booking System**: Complete booking workflow with user details and payment simulation
+- **Booking History**: View recent bookings with detailed information
 
 ### 🏗️ Architecture
-- **MVC Pattern**: Separated controllers, services, and database layers
-- **Environment Configuration**: Configurable via environment variables
-- **Error Handling**: Comprehensive error handling with graceful degradation
-- **Type Safety**: Full TypeScript implementation
+- **TypeORM Integration**: Full ORM with entity relationships and database migrations
+- **Auto Database Initialization**: Schema creation and data seeding on startup
+- **RESTful API**: Clean API endpoints for ticket operations
+- **Environment Configuration**: Configurable database connections (SQLite for dev, PostgreSQL for production)
+- **Error Handling**: Comprehensive error handling with user-friendly messages
+- **Type Safety**: Full TypeScript implementation throughout
+
+### 🚀 Performance & UX
+- **Code Splitting**: Lazy loading for React components with Suspense
+- **Responsive Design**: Mobile-friendly interface with modern CSS
+- **Form Validation**: Client-side validation with user feedback
+- **Loading States**: Proper loading indicators and async state management
 
 ### 🐳 Docker & Deployment
-- **Containerized**: Multi-stage Docker builds for optimized images
-- **Orchestration**: Docker Compose for local development
-- **Production Ready**: Nginx reverse proxy with proper configuration
+- **Containerized**: Multi-service Docker setup with PostgreSQL database
+- **Orchestration**: Docker Compose for easy local development
+- **Production Ready**: Nginx reverse proxy for frontend serving
 
 ## Tech Stack
 
-- **Frontend**: React 18, TypeScript, CSS3
-- **Backend**: Node.js, Express, TypeScript
-- **Database**: In-memory (easily replaceable with PostgreSQL/MySQL)
-- **Cache**: Redis
-- **Deployment**: Docker, Docker Compose
+- **Frontend**: React 18, TypeScript, CSS3, React Router
+- **Backend**: Node.js, Express.js, TypeScript
+- **Database**: TypeORM with PostgreSQL (production) / SQLite (development)
+- **Deployment**: Docker, Docker Compose, Nginx
 
 ## Quick Start
 
 ### Prerequisites
-- Node.js 18+ (required)
-- Redis (optional - app works without it)
-- Docker and Docker Compose (optional - for containerized deployment)
+- Node.js 18+ (for local development)
+- Docker and Docker Compose (for containerized deployment)
 
 ### Using Docker (Recommended)
 
-1. **Start Docker Desktop** (if using Docker)
-2. Clone the repository
+1. **Clone the repository**
 ```bash
 git clone <repository-url>
 cd ticket-booking-app
 ```
 
-3. Start all services
+2. **Start all services**
 ```bash
 docker-compose up --build
 ```
 
-4. Access the application
+3. **Access the application**
 - Frontend: http://localhost:3000
 - Backend API: http://localhost:3001
 
 ### Local Development (Without Docker)
 
-1. Install dependencies
+1. **Install dependencies**
 ```bash
 # Backend
 cd backend
@@ -68,12 +73,15 @@ cd ../frontend
 npm install
 ```
 
-2. Start Redis (if not using Docker)
-```bash
-redis-server
-```
+2. **Set up database** (choose one):
+   - **SQLite** (default for development):
+     - Database file will be created automatically at `backend/ticketbooking.db`
+   - **PostgreSQL**:
+     - Install PostgreSQL locally
+     - Create database: `ticketbooking`
+     - Update `backend/.env` with your PostgreSQL credentials
 
-3. Start services
+3. **Start services**
 ```bash
 # Backend (Terminal 1)
 cd backend
@@ -87,44 +95,102 @@ npm start
 ## API Endpoints
 
 ### GET /tickets
-Get available tickets information.
+Get available tickets information with pricing and availability.
+```json
+[
+  {
+    "tier": "VIP",
+    "price": 100,
+    "available": 95,
+    "total": 100,
+    "booked": 5
+  }
+]
+```
 
 ### GET /bookings
-Get all bookings.
+Get all bookings (recent bookings shown in UI).
+```json
+[
+  {
+    "id": "uuid",
+    "userId": "user123",
+    "tier": "VIP",
+    "quantity": 2,
+    "totalPrice": 200,
+    "timestamp": "2024-01-17T...",
+    "userName": "John Doe",
+    "email": "john@example.com"
+  }
+]
+```
 
 ### POST /hold
-Hold tickets temporarily (5 minutes).
+Hold tickets temporarily (5 minutes expiry).
 ```json
 {
-  "userId": "string",
-  "tier": "VIP|FrontRow|GA",
-  "quantity": number
+  "userId": "user123",
+  "tier": "VIP",
+  "quantity": 2
+}
+```
+Response:
+```json
+{
+  "hold": { "id": "hold-uuid" },
+  "expiresAt": "2024-01-17T..."
 }
 ```
 
 ### POST /confirm
-Confirm a held booking.
+Confirm a held booking with user details.
 ```json
 {
-  "holdId": "string",
-  "userName": "string",
-  "email": "string",
-  "phone": "string"
+  "holdId": "hold-uuid",
+  "userName": "John Doe",
+  "email": "john@example.com",
+  "phone": "+1234567890"
 }
 ```
 
 ### POST /book
-Direct booking (for demo purposes).
+Direct booking (bypasses hold system for demo).
 ```json
 {
-  "userId": "string",
-  "tier": "VIP|FrontRow|GA",
-  "quantity": number,
-  "userName": "string",
-  "email": "string",
-  "phone": "string"
+  "userId": "user123",
+  "tier": "VIP",
+  "quantity": 2,
+  "userName": "John Doe",
+  "email": "john@example.com",
+  "phone": "+1234567890"
 }
 ```
+
+## Database Schema
+
+### Ticket Entity
+- `tier`: Primary key (VIP|FrontRow|GA)
+- `price`: Decimal pricing
+- `available`: Current available count
+- `total`: Total tickets for this tier
+- `booked`: Number of booked tickets
+
+### Booking Entity
+- `id`: UUID primary key
+- `userId`: User identifier
+- `tier`: Ticket tier reference
+- `quantity`: Number of tickets booked
+- `totalPrice`: Calculated total price
+- `timestamp`: Booking creation time
+- `userName`, `email`, `phone`: Optional user details
+
+### TicketHold Entity
+- `id`: UUID primary key
+- `userId`: User identifier
+- `tier`: Ticket tier reference
+- `quantity`: Number of tickets held
+- `expiresAt`: Hold expiry timestamp
+- `userIdTier`: Composite index for efficient lookups
 
 ## Configuration
 
@@ -132,20 +198,27 @@ Direct booking (for demo purposes).
 
 #### Backend (.env)
 ```env
-PORT=3001
 NODE_ENV=development
-REDIS_URL=redis://localhost:6379
-CACHE_TTL=300
+PORT=3003
+
+# Database Configuration
+DB_HOST=localhost          # 'postgres' for Docker, 'localhost' for local
+DB_PORT=5432              # PostgreSQL port
+DB_USERNAME=postgres
+DB_PASSWORD=password
+DB_NAME=ticketbooking
+```
+
+#### Frontend (.env)
+```env
+REACT_APP_API_BASE_URL=http://localhost:3001
 ```
 
 #### Docker Environment
-Environment variables are configured in `docker-compose.yml` for each service.
-
-## Caching Strategy
-
-- **Tickets data**: Cached for 5 minutes
-- **Cache invalidation**: Automatic invalidation when ticket availability changes
-- **Redis persistence**: Data persists across container restarts
+Database configuration is handled automatically in `docker-compose.yml`:
+- PostgreSQL container with persistent volume
+- Backend connects to `postgres` service
+- Database auto-initializes with sample data
 
 ## Project Structure
 
@@ -154,71 +227,111 @@ ticket-booking-app/
 ├── backend/
 │   ├── src/
 │   │   ├── controllers/
-│   │   │   └── ticketController.ts
-│   │   ├── services/
-│   │   │   └── cacheService.ts
-│   │   ├── database.ts
-│   │   └── server.ts
+│   │   │   └── ticketController.ts    # API route handlers
+│   │   ├── entities/                  # TypeORM entities
+│   │   │   ├── Ticket.ts             # Ticket tiers and pricing
+│   │   │   ├── Booking.ts            # Completed bookings
+│   │   │   └── TicketHold.ts         # Temporary holds
+│   │   ├── dataSource.ts             # TypeORM configuration
+│   │   ├── database.ts               # Database service & initialization
+│   │   └── server.ts                 # Express server setup
 │   ├── Dockerfile
 │   ├── package.json
 │   └── .env
 ├── frontend/
 │   ├── src/
-│   │   ├── App.tsx
-│   │   ├── Loading.tsx
-│   │   └── index.tsx
+│   │   ├── components/               # React components
+│   │   │   ├── TicketList.tsx        # Ticket availability display
+│   │   │   ├── BookingForm.tsx       # Booking form with validation
+│   │   │   ├── BookingsList.tsx      # Recent bookings list
+│   │   │   └── Message.tsx           # Status messages
+│   │   ├── services/
+│   │   │   └── apiService.ts         # API communication
+│   │   ├── App.tsx                   # Main application component
+│   │   ├── index.tsx                 # React entry point
+│   │   └── Loading.tsx               # Loading component
+│   ├── public/
+│   │   └── index.html
 │   ├── Dockerfile
-│   ├── nginx.conf
+│   ├── nginx.conf                    # Nginx configuration
 │   └── package.json
-├── docker-compose.yml
+├── docker-compose.yml                # Multi-service orchestration
 └── README.md
 ```
 
 ## Development
 
-### Bundle Analysis
-```bash
-cd frontend
-npm run analyze
-```
+### Available Scripts
 
-### Testing
+#### Backend
 ```bash
-# Backend
 cd backend
-npm test
-
-# Frontend
-cd frontend
-npm test
+npm run build    # Compile TypeScript
+npm run start    # Start production server
+npm run dev      # Start development server with auto-reload
 ```
 
-### Building for Production
+#### Frontend
 ```bash
-# Backend
+cd frontend
+npm start        # Start development server
+npm run build    # Create production build
+```
+
+### Database Management
+
+- **Auto-initialization**: Database schema and sample data are created automatically on first run
+- **Migrations**: TypeORM handles schema changes automatically with `synchronize: true`
+- **Data Seeding**: Initial ticket data (VIP: 100, FrontRow: 200, GA: 500) is seeded on startup
+
+### Code Quality
+
+- **TypeScript**: Full type safety across frontend and backend
+- **ESLint**: Code linting (if configured)
+- **Prettier**: Code formatting (if configured)
+
+## Deployment
+
+### Docker Production Deployment
+
+1. **Build and run**
+```bash
+docker-compose -f docker-compose.yml up --build -d
+```
+
+2. **Scale services** (optional)
+```bash
+docker-compose up --scale backend=3
+```
+
+### Manual Deployment
+
+1. **Build frontend**
+```bash
+cd frontend
+npm run build
+```
+
+2. **Build backend**
+```bash
 cd backend
 npm run build
-
-# Frontend
-cd frontend
-npm run build
 ```
 
-## Performance Metrics
-
-- **Initial Bundle Size**: ~150KB (gzipped)
-- **First Contentful Paint**: <2s with caching
-- **API Response Time**: <100ms with Redis caching
-- **Container Size**: Frontend ~50MB, Backend ~120MB
+3. **Deploy to server**
+   - Copy built files to server
+   - Set up PostgreSQL database
+   - Configure environment variables
+   - Start services with process manager (PM2, systemd, etc.)
 
 ## Contributing
 
 1. Fork the repository
-2. Create a feature branch
-3. Commit changes
-4. Push to the branch
-5. Create a Pull Request
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ## License
 
-MIT License
+MIT License - see LICENSE file for details

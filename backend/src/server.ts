@@ -10,6 +10,10 @@ const port = process.env.PORT ? parseInt(process.env.PORT) : 3003;
 app.use(cors());
 app.use(express.json());
 
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
 app.get('/tickets', getTickets);
 app.get('/bookings', getBookings);
 app.post('/hold', holdTickets);
