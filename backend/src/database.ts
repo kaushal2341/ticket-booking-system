@@ -99,7 +99,7 @@ export class Database {
   }
 
   async holdTickets(userId: string, tier: TicketTier, quantity: number): Promise<TicketHoldResponse | null> {
-    return await AppDataSource.transaction(async (manager: EntityManager) => {
+    const result = await AppDataSource.transaction(async (manager: EntityManager) => {
       const ticketRepo = manager.getRepository(Ticket);
       const holdRepo = manager.getRepository(TicketHold);
 
@@ -133,10 +133,17 @@ export class Database {
         expiresAt: savedHold.expiresAt,
       };
     });
+
+    // Emit real-time update
+    if (result && global.io) {
+      global.io.emit('ticketsUpdated');
+    }
+
+    return result;
   }
 
   async confirmBooking(holdId: string, userName?: string, email?: string, phone?: string): Promise<BookingResponse | null> {
-    return await AppDataSource.transaction(async (manager: EntityManager) => {
+    const result = await AppDataSource.transaction(async (manager: EntityManager) => {
       const holdRepo = manager.getRepository(TicketHold);
       const bookingRepo = manager.getRepository(Booking);
       const ticketRepo = manager.getRepository(Ticket);
@@ -190,6 +197,14 @@ export class Database {
         phone: savedBooking.phone,
       };
     });
+
+    // Emit real-time updates
+    if (result && global.io) {
+      global.io.emit('ticketsUpdated');
+      global.io.emit('bookingsUpdated');
+    }
+
+    return result;
   }
 
   async getBookings(): Promise<BookingResponse[]> {
@@ -236,7 +251,7 @@ export class Database {
   }
 
   async bookTickets(userId: string, tier: TicketTier, quantity: number, userName?: string, email?: string, phone?: string): Promise<BookingResponse | null> {
-    return await AppDataSource.transaction(async (manager: EntityManager) => {
+    const result = await AppDataSource.transaction(async (manager: EntityManager) => {
       const ticketRepo = manager.getRepository(Ticket);
       const bookingRepo = manager.getRepository(Booking);
 
@@ -278,5 +293,13 @@ export class Database {
         phone: savedBooking.phone,
       };
     });
+
+    // Emit real-time updates
+    if (result && global.io) {
+      global.io.emit('ticketsUpdated');
+      global.io.emit('bookingsUpdated');
+    }
+
+    return result;
   }
 }

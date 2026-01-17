@@ -7,6 +7,7 @@ A full-stack ticket booking application with React frontend, Node.js/Express bac
 ### 🎫 Core Functionality
 - **Ticket Management**: Three ticket tiers (VIP, Front Row, General Admission)
 - **Real-time Availability**: Live ticket availability tracking with visual progress bars
+- **Real-time Updates**: Instant synchronization across multiple browser tabs using Socket.IO
 - **Ticket Holding**: 5-minute hold system to reserve tickets before payment
 - **Booking System**: Complete booking workflow with user details and payment simulation
 - **Booking History**: View recent bookings with detailed information
@@ -32,8 +33,8 @@ A full-stack ticket booking application with React frontend, Node.js/Express bac
 
 ## Tech Stack
 
-- **Frontend**: React 18, TypeScript, CSS3, React Router
-- **Backend**: Node.js, Express.js, TypeScript
+- **Frontend**: React 18, TypeScript, CSS3, React Router, Socket.IO Client
+- **Backend**: Node.js, Express.js, TypeScript, Socket.IO
 - **Database**: TypeORM with PostgreSQL (production) / SQLite (development)
 - **Deployment**: Docker, Docker Compose, Nginx
 
@@ -166,6 +167,30 @@ Direct booking (bypasses hold system for demo).
 }
 ```
 
+## WebSocket Events
+
+The application uses Socket.IO for real-time updates across multiple browser tabs.
+
+### Client Events (Frontend → Backend)
+- **connection**: Establishes WebSocket connection
+- **disconnect**: Closes WebSocket connection
+
+### Server Events (Backend → Frontend)
+- **ticketsUpdated**: Emitted when ticket availability changes (hold, booking, confirmation)
+- **bookingsUpdated**: Emitted when new bookings are created
+
+### Usage
+```javascript
+import { socketService } from './services/socketService';
+
+// Connect to socket service
+socketService.connect('http://localhost:3001');
+
+// Register callback functions
+socketService.onTicketsUpdate(fetchTickets);
+socketService.onBookingsUpdate(fetchBookings);
+```
+
 ## Database Schema
 
 ### Ticket Entity
@@ -199,7 +224,7 @@ Direct booking (bypasses hold system for demo).
 #### Backend (.env)
 ```env
 NODE_ENV=development
-PORT=3003
+PORT=3001
 
 # Database Configuration
 DB_HOST=localhost          # 'postgres' for Docker, 'localhost' for local
@@ -246,7 +271,8 @@ ticket-booking-app/
 │   │   │   ├── BookingsList.tsx      # Recent bookings list
 │   │   │   └── Message.tsx           # Status messages
 │   │   ├── services/
-│   │   │   └── apiService.ts         # API communication
+│   │   │   ├── apiService.ts         # API communication
+│   │   │   └── socketService.ts      # Real-time Socket.IO service
 │   │   ├── App.tsx                   # Main application component
 │   │   ├── index.tsx                 # React entry point
 │   │   └── Loading.tsx               # Loading component

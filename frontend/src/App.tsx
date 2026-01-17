@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 import { apiService, Ticket, Booking } from './services/apiService';
+import { socketService } from './services/socketService';
 import TicketList from './components/TicketList';
 import BookingForm from './components/BookingForm';
 import BookingsList from './components/BookingsList';
@@ -17,6 +18,7 @@ function App() {
   const [currentHoldId, setCurrentHoldId] = useState<string | null>(null);
   const [holdExpiresAt, setHoldExpiresAt] = useState<Date | null>(null);
 
+
   // Additional realistic fields
   const [userName, setUserName] = useState('');
   const [email, setEmail] = useState('');
@@ -29,21 +31,35 @@ function App() {
   useEffect(() => {
     fetchTickets();
     fetchBookings();
+
+    // Connect to socket for real-time updates
+    socketService.connect(process.env.REACT_APP_API_BASE_URL || 'http://localhost:3001');
+    socketService.onTicketsUpdate(fetchTickets);
+    socketService.onBookingsUpdate(fetchBookings);
+
+    // Cleanup on unmount
+    return () => {
+      socketService.disconnect();
+    };
   }, []);
 
   const fetchTickets = async () => {
+    console.log('Fetching tickets...');
     try {
       const data = await apiService.fetchTickets();
       setTickets(data);
+      console.log('Tickets fetched successfully:', data.length, 'tickets');
     } catch (error) {
       console.error('Error fetching tickets:', error);
     }
   };
 
   const fetchBookings = async () => {
+    console.log('Fetching bookings...');
     try {
       const data = await apiService.fetchBookings();
       setBookings(data);
+      console.log('Bookings fetched successfully:', data.length, 'bookings');
     } catch (error) {
       console.error('Error fetching bookings:', error);
     }
