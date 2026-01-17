@@ -23,6 +23,10 @@
     "declaration": true,
     "declarationMap": true,
 
+    // Decorator Support
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+
     // Stricter Typechecking Options
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
@@ -38,7 +42,6 @@
     // Recommended Options
     "strict": true,
     "jsx": "react-jsx",
-    "verbatimModuleSyntax": true,
     "isolatedModules": true,
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",

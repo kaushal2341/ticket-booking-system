@@ -1,8 +1,8 @@
+import 'reflect-metadata';
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
-import { getTickets, getBookings, holdTickets, confirmBooking, bookTickets } from './controllers/ticketController.js';
-import { cacheService } from './services/cacheService.js';
+import { getTickets, getBookings, holdTickets, confirmBooking, bookTickets, dbInitPromise } from './controllers/ticketController.js';
 
 const app = express();
 const port = process.env.PORT ? parseInt(process.env.PORT) : 3003;
@@ -16,6 +16,12 @@ app.post('/hold', holdTickets);
 app.post('/confirm', confirmBooking);
 app.post('/book', bookTickets);
 
-app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`);
+// Wait for database initialization before starting server
+dbInitPromise.then(() => {
+  app.listen(port, () => {
+    console.log(`Server running at http://localhost:${port}`);
+  });
+}).catch(error => {
+  console.error('Failed to start server due to database initialization error:', error);
+  process.exit(1);
 });

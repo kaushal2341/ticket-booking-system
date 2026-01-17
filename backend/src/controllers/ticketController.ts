@@ -1,22 +1,18 @@
 import type { Request, Response } from 'express';
 import { Database } from '../database.js';
 import type { TicketTier } from '../database.js';
-import { cacheService } from '../services/cacheService.js';
 
 const db = new Database();
-const CACHE_TTL = process.env.CACHE_TTL ? parseInt(process.env.CACHE_TTL) : 300;
+
+// Ensure database is initialized before handling requests
+export const dbInitPromise = db.init().catch(error => {
+  console.error('Failed to initialize database:', error);
+  process.exit(1);
+});
 
 export const getTickets = async (req: Request, res: Response) => {
   try {
-    const cacheKey = 'tickets';
-    const cachedData = await cacheService.get(cacheKey);
-
-    if (cachedData) {
-      return res.json(JSON.parse(cachedData));
-    }
-
     const tickets = await db.getTickets();
-    await cacheService.set(cacheKey, JSON.stringify(tickets), CACHE_TTL);
     res.json(tickets);
   } catch (error) {
     console.error('Error fetching tickets:', error);
@@ -47,9 +43,6 @@ export const holdTickets = async (req: Request, res: Response) => {
       return res.status(409).json({ error: 'Not enough tickets available' });
     }
 
-    // Invalidate tickets cache since availability changed
-    await cacheService.delete('tickets');
-
     res.json({ hold, expiresAt: hold.expiresAt });
   } catch (error) {
     console.error('Error holding tickets:', error);
@@ -69,9 +62,6 @@ export const confirmBooking = async (req: Request, res: Response) => {
     if (!booking) {
       return res.status(409).json({ error: 'Hold expired or not found' });
     }
-
-    // Invalidate tickets cache since availability changed
-    await cacheService.delete('tickets');
 
     res.json({ booking, paymentStatus: 'success' });
   } catch (error) {
@@ -100,9 +90,6 @@ export const bookTickets = async (req: Request, res: Response) => {
     if (!booking) {
       return res.status(409).json({ error: 'Not enough tickets available' });
     }
-
-    // Invalidate tickets cache since availability changed
-    await cacheService.delete('tickets');
 
     res.json({ booking, paymentStatus: 'success' });
   } catch (error) {

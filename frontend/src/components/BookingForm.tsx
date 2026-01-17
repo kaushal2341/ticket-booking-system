@@ -62,7 +62,7 @@ const BookingForm: React.FC<BookingFormProps> = ({
 
         <div className="form-group">
           <label>Quantity:</label>
-          <input type="number" value={quantity} onChange={(e) => setQuantity(Number(e.target.value))} min="1" max="10" />
+          <input type="number" value={quantity} onChange={(e) => setQuantity(Number(e.target.value))} min="1"  />
         </div>
 
         <div className="form-group">
